@@ -6,7 +6,7 @@ DEFAULT_PROMPT = """A close up face of a man staring in to the eyes of the viewe
 The man's face is covered in wrinkles. A tattoo on forehead with text 'PROMPT MISSING'.
 He has beautiful wavy long hair and big blue eyes.
 """
-PROMPT_TEMPLATE = """You are an artist AI that accepts a text description and responds with same description with additional visual details in natural language.
+PROMPT_TEMPLATE = """You are an artist AI that accepts a text description and responds with same description with additional visual details in natural language without missing any detail from the original description.
 Description: {}
 Detailed Description:"""
 
@@ -31,7 +31,9 @@ class SmartPrompt:
             json={
                 "model": model,
                 "ttl": 0,
-                "prompt": PROMPT_TEMPLATE.format(prompt),
+                "prompt": PROMPT_TEMPLATE.format(prompt)
+                if prompt
+                else PROMPT_TEMPLATE.format(DEFAULT_PROMPT),
                 "temparature": 0.7,
                 "max_tokens": 512,
                 "stream": False,
@@ -51,9 +53,7 @@ class SmartPrompt:
                     "STRING",
                     {
                         "multiline": True,
-                        "default": s.model_list[0]["id"]
-                        if s.model_list
-                        else "None available",
+                        "default": "" if s.model_list else "None available",
                     },
                 ),
                 "provider": (["LM Studio"], {}),
@@ -70,7 +70,12 @@ class SmartPrompt:
 
     @classmethod
     def IS_CHANGED(s, prompt: str, provider: str, model: dict, seed: int):
-        return {prompt, provider, model, seed}.__dict__
+        return {
+            "prompt": prompt,
+            "provider": provider,
+            "model": model,
+            "seed": seed,
+        }
 
     def expand_prompt(
         self, prompt: str, provider: str, model: dict, seed: int
